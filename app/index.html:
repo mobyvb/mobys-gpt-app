@@ -1,0 +1,30 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                text-align: center;
+            }
+            h1 {
+                color: #2c3e50;
+            }
+        </style>
+        <script>
+            function fetchNumberAndUpdateBackground() {
+                fetch('/api/number')
+                    .then(response => response.text())
+                    .then(number => {
+                        document.getElementById('numberDisplay').innerText = number;
+                        document.body.style.backgroundColor = (number % 3 === 0) ? 'red' : 'white';
+                    });
+            }
+        </script>
+    </head>
+    <body>
+        <h1>moby's cool app</h1>
+        <button onclick="fetchNumberAndUpdateBackground()">Get random number</button>
+        <div id="numberDisplay"></div>
+    </body>
+</html>
