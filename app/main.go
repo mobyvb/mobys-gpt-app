@@ -12,7 +12,6 @@ import (
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		content, err := ioutil.ReadFile("index.html")
 		if err != nil {
@@ -26,7 +25,7 @@ func main() {
 		w.Write([]byte(strconv.Itoa(number)))
 	})
 
-	listener, err := net.Listen("tcp", ":0")
+	listener, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		log.Fatal(err)
 	}
