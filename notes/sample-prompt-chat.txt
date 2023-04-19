@@ -1,0 +1,98 @@
+Me:
+
+Files:
+  - name: main.go
+    contents:
+    ```
+    package main
+    
+    func main() {
+    
+    }
+    ```
+  - name: index.html
+    contents:
+    ```
+    <html>
+        <head></head>
+        <body></body>
+    </html>
+    ```
+     
+Modify the files above to accomplish the following task:
+Subject: Create static server
+Body:
+  - Update the homepage (index.html) with basic CSS and a header "moby's cool app"
+  - Serve the html file from a Go server in main.go
+  
+Respond in the exact format:
+Files: 
+  - name: main.go
+    contents:
+    ```
+    <new main.go contents>
+    ```
+  - name: index.html
+    contents:
+    ```
+    <new index.html contents>
+    ```
+Notes:
+<additional context about your changes>
+
+GPT-4:
+
+Files:
+
+name: main.go
+contents:
+go
+Copy code
+package main
+
+import (
+    "io/ioutil"
+    "log"
+    "net/http"
+)
+
+func main() {
+    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        content, err := ioutil.ReadFile("index.html")
+        if err != nil {
+            log.Fatal(err)
+        }
+        w.Write(content)
+    })
+
+    log.Println("Starting server on :8080")
+    err := http.ListenAndServe(":8080", nil)
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+name: index.html
+contents:
+php
+Copy code
+<html>
+    <head>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                text-align: center;
+            }
+
+            h1 {
+                color: #2c3e50;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>moby's cool app</h1>
+    </body>
+</html>
+Notes:
+
+In the index.html file, I have added a <style> tag in the <head> section to define basic CSS styles for the body and header. The header "moby's cool app" is now wrapped in an <h1> tag.
+In the main.go file, I have created a simple Go server to serve the index.html file. The server listens on port 8080 and serves the content of index.html for the root path ("/"). The file is read using ioutil.ReadFile and then written to the ResponseWriter.

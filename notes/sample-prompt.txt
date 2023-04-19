@@ -1,0 +1,42 @@
+Files:
+  - name: main.go
+    contents:
+    ```
+    package main
+    
+    func main() {
+    
+    }
+    ```
+  - name: index.html
+    contents:
+    ```
+    <html>
+        <head></head>
+        <body></body>
+    </html>
+    ```
+     
+Modify the files above to accomplish the following task:
+Subject: Create static server
+Body:
+  - Update the homepage (index.html) with basic CSS and a header "moby's cool app"
+  - Serve the html file from a Go server in main.go
+  
+Respond in the exact format:
+Files: 
+  - name: main.go
+    contents:
+    ```
+    <new main.go contents>
+    ```
+  - name: index.html
+    contents:
+    ```
+    <new index.html contents>
+    ```
+Notes:
+<additional context about your changes>
+
+
+
