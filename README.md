@@ -32,7 +32,7 @@ So I tried this prompt:
 
 Files:
   - name: main.go
-    contents:
+  - contents:
     ```
     package main
 
@@ -41,7 +41,7 @@ Files:
     }
     ```
   - name: index.html
-    contents:
+  - contents:
     ```
     <html>
         <head></head>
@@ -50,31 +50,35 @@ Files:
     ```
 
 Modify the files above to accomplish the following task:
+
 Subject: Create static server
+
 Body:
   - Update the homepage (index.html) with basic CSS and a header "moby's cool app"
   - Serve the html file from a Go server in main.go
 
 Respond in the exact format:
+
 Files:
   - name: main.go
-    contents:
+  - contents:
     ```
     <new main.go contents>
     ```
   - name: index.html
-    contents:
+  - contents:
     ```
     <new index.html contents>
     ```
 Notes:
-<additional context about your changes>
+
+\<additional context about your changes\>
 
 ### END OF PROMPT
 
 And GPT-4 responded in the exact format I requested. So now, this can be a template.
 
-p.s. check ./notes/sample-prompt-chat.txt to see the first chat I tried out.
+p.s. check [./notes/sample-prompt-chat.txt](./notes/sample-prompt-chat.txt) to see the first chat I tried out.
 
 ## The Plan, but more specific
 
@@ -99,7 +103,7 @@ p.s. check ./notes/sample-prompt-chat.txt to see the first chat I tried out.
 
 Files:
   - name: main.go
-    contents:
+  - contents:
     ```
     package main
 
@@ -127,19 +131,23 @@ Files:
     ```
 
 Modify the file above to address the following comment:
+
 Line: `err := http.ListenAndServe(":8080", nil)`
+
 Comment: Please update this to use any available port rather than a static one.
 
 Respond in the exact format:
+
 Files:
   - name: main.go
-    contents:
+  - contents:
     ```
     <new main.go contents>
     ```
 Notes:
-<additional context about your changes>
+
+\<additional context about your changes\>
 
 ### END OF PROMPT
 
-see ./notes/sample-prompt-chat.txt (or git history) for results.
+see [./notes/sample-prompt-chat.txt](./notes/sample-prompt-chat.txt) (or git history) for results.
