@@ -3,6 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 )
 
@@ -15,8 +16,14 @@ func main() {
 		w.Write(content)
 	})
 
-	log.Println("Starting server on :8080")
-	err := http.ListenAndServe(":8080", nil)
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		log.Fatal(err)
+	}
+	addr := listener.Addr().(*net.TCPAddr)
+	log.Printf("Starting server on :%d", addr.Port)
+
+	err = http.Serve(listener, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
