@@ -22,7 +22,7 @@ func (i IssueInfo) String() string {
 	if err != nil {
 		panic(err)
 	}
-	return prompt
+	return "START OF PROMPT\n" + prompt + "\nEND OF PROMPT"
 }
 
 type IssueResponse struct {
