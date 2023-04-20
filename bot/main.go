@@ -10,6 +10,20 @@ import (
 )
 
 func main() {
+	processResponse()
+	// processIssues()
+}
+
+func processResponse() {
+	data, err := ioutil.ReadFile("response.txt")
+	if err != nil {
+		panic(err)
+	}
+	issueResponse := ParseIssueResponse(string(data))
+	fmt.Println(issueResponse)
+}
+
+func processIssues() {
 	owner := "mobyvb"
 	repoName := "mobys-gpt-app"
 
@@ -31,12 +45,6 @@ func main() {
 
 	// TODO this code should go somewhere else
 	for _, issue := range issues {
-		/*
-			fmt.Printf("#%d: %s\n", *issue.Number, *issue.Title)
-			fmt.Printf("%s\n", *issue.Body)
-			fmt.Println(*issue.User.Login)
-		*/
-
 		// TOOD allowlist of users who can do stuff
 		if *issue.User.Login == owner {
 			issueBody := *issue.Body
@@ -46,7 +54,6 @@ func main() {
 			body := parts[0]
 			fileList := strings.Split(parts[1], ",")
 
-			fmt.Println("we can do this one")
 			issueInfo := IssueInfo{
 				Subject: *issue.Title,
 				Body:    body,
@@ -54,8 +61,6 @@ func main() {
 
 			for _, p := range fileList {
 				p = strings.TrimSpace(p)
-				fmt.Println("file list item")
-				fmt.Println(strings.TrimSpace(p))
 
 				// TODO "../" here is hardcoded but needs to go at some point
 				data, err := ioutil.ReadFile("../" + p)
