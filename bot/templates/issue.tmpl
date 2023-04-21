@@ -15,7 +15,7 @@ Body:
 Respond in the exact format:
 Files:
 {{ range $index, $file := .Files }}
-  - name: {{ $file.Path }}:
+  - name: {{ $file.Path }}
     contents:
     ```
     [new {{ $file.Path }} contents]

@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"go/format"
 	"io/ioutil"
@@ -11,7 +13,10 @@ import (
 	"strings"
 
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
+	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
 
 func main() {
@@ -24,7 +29,7 @@ func main() {
 		log.Fatal("GITHUB_GPT_ACCESS_TOKEN environment variable not set")
 	}
 
-	//ctx := context.Background()
+	ctx := context.Background()
 
 	//processIssues(ctx, owner, repoName, token)
 
@@ -33,12 +38,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	repo, err := GetLatestRepo("/tmp/mytmprepo", owner, repoName, token)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = processResponse("/tmp/mytmprepo", repo)
+	err = processResponse(ctx, "/tmp/mytmprepo", repo, owner, repoName, token)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -89,7 +95,7 @@ func processIssues(ctx context.Context, owner, repoName, token string) {
 	}
 }
 
-func processResponse(localRepoPath string, repo *git.Repository /*owner, repoName, token string*/) error {
+func processResponse(ctx context.Context, localRepoPath string, repo *git.Repository, owner, repoName, token string) error {
 	data, err := ioutil.ReadFile("response.txt")
 	if err != nil {
 		return err
@@ -103,6 +109,7 @@ func processResponse(localRepoPath string, repo *git.Repository /*owner, repoNam
 	}
 
 	for _, f := range issueResponse.Files {
+
 		fullPath := filepath.Join(localRepoPath, f.Path)
 
 		// TODO standard indentation (for non-go files)
@@ -113,6 +120,7 @@ func processResponse(localRepoPath string, repo *git.Repository /*owner, repoNam
 			}
 			f.Contents = string(newContents)
 		}
+
 		err = ioutil.WriteFile(fullPath, []byte(f.Contents), 0644)
 		if err != nil {
 			return err
@@ -125,7 +133,7 @@ func processResponse(localRepoPath string, repo *git.Repository /*owner, repoNam
 	}
 
 	commitMessage := "TODO subject from issue\n\n" + issueResponse.Notes + "\n\nResolves #issuenumber"
-	commit, err := worktree.Commit(commitMessage, &git.CommitOptions{
+	_, err = worktree.Commit(commitMessage, &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  "moby-robot-fakename",           // Replace with your name
 			Email: "mobyrobot-fakeemail@gmail.com", // Replace with your email
@@ -135,18 +143,14 @@ func processResponse(localRepoPath string, repo *git.Repository /*owner, repoNam
 		return err
 	}
 
-	_ = commit
-	return nil
-}
-
-// Create a new branch
-/*
-	branchName := "moby-robot-branch"
+	// create a new branch
+	//branchName := "moby-robot-branch"
+	branchName := randomBranchName()
 	branchRefName := plumbing.NewBranchReferenceName(branchName)
 
 	headRef, err := repo.Head()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	err = repo.CreateBranch(&config.Branch{
@@ -155,29 +159,44 @@ func processResponse(localRepoPath string, repo *git.Repository /*owner, repoNam
 		Merge:  branchRefName,
 	})
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	// Update the branch to point to the new commit
 	err = repo.Storer.SetReference(plumbing.NewHashReference(branchRefName, headRef.Hash()))
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	// Push the new branch to the remote repository
 	remote, err := repo.Remote("origin")
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	err = remote.Push(&git.PushOptions{
 		RefSpecs: []config.RefSpec{config.RefSpec(fmt.Sprintf("%s:refs/heads/%s", branchRefName, branchName))},
 		Auth: &http.BasicAuth{
-			Username: "mobyvb", // Your GitHub username
+			Username: owner, // Your GitHub username
 			Password: token,
 		},
 	})
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-*/
+
+	// finally, create a pull request from the newly pushed branch
+	client := GetGithubClient(ctx, token)
+	err = CreatePR(ctx, client, owner, repoName, branchName, "TODO replace me title", commitMessage)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func randomBranchName() string {
+	bytes := make([]byte, 4)
+	rand.Read(bytes)
+	return hex.EncodeToString(bytes)
+}

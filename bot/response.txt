@@ -6,38 +6,76 @@ contents:
 package main
 
 import (
-    "io/ioutil"
-    "log"
-    "net/http"
-    "net"
+"io/ioutil"
+"log"
+"math/rand"
+"net"
+"net/http"
+"strconv"
+"time"
 )
 
 func main() {
+rand.Seed(time.Now().UnixNano())
     http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-        content, err := ioutil.ReadFile("index.html")
-        if err != nil {
-            log.Fatal(err)
-        }
-        w.Write(content)
+            content, err := ioutil.ReadFile("index.html")
+            if err != nil {
+                    log.Fatal(err)
+            }
+            w.Write(content)
     })
 
-    listener, err := net.Listen("tcp", ":0")
+    http.HandleFunc("/api/number", func(w http.ResponseWriter, r *http.Request) {
+            number := rand.Intn(100) + 1
+            w.Write([]byte(strconv.Itoa(number)))
+    })
+
+    listener, err := net.Listen("tcp", ":8080")
     if err != nil {
-        log.Fatal(err)
+            log.Fatal(err)
     }
     addr := listener.Addr().(*net.TCPAddr)
     log.Printf("Starting server on :%d", addr.Port)
-    
+
     err = http.Serve(listener, nil)
     if err != nil {
-        log.Fatal(err)
+            log.Fatal(err)
     }
 }
 ```
+name: app/index.html
+contents:
+```
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                text-align: center;
+            }
+            h1 {
+                color: #2c3e50;
+            }
+        </style>
+        <script>
+            function fetchNumberAndUpdateBackground() {
+                fetch('/api/number')
+                    .then(response => response.text())
+                    .then(number => {
+                        document.getElementById('numberDisplay').innerText = number;
+                        document.body.style.backgroundColor = (number % 3 === 0) ? 'red' : 'white';
+                    });
+            }
+        </script>
+    </head>
+    <body>
+        <h1>moby's cool app</h1>
+        <button onclick="fetchNumberAndUpdateBackground()">Get random number</button>
+        <div id="numberDisplay"></div>
+    </body>
+</html>
+```
 Notes:
+In app/main.go, I changed the dynamic port allocation to a static port 8080 by updating the net.Listen() function. In app/index.html, I modified the JavaScript function fetchNumberAndUpdateBackground() to change the background color to red when the number is divisible by three, instead of green when the number is divisible by two.
 
-I have imported the "net" package to use the net.Listen function.
-Instead of using a static port (":8080"), I have changed it to use any available port by passing ":0" to net.Listen.
-net.Listen returns a Listener object, which can be used to get the actual port number the server is listening on.
-I have updated the log message to display the port number being used by the server.
-The http.Serve function is used to serve the HTTP requests using the provided listener, which allows us to serve the content on the dynamically chosen port.
