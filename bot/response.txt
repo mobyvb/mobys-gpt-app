@@ -1,6 +1,6 @@
 Files:
 
-name: main.go
+name: app/main.go
 contents:
 ```
 package main

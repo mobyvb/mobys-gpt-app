@@ -3,13 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
+	"go/format"
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
 func main() {
@@ -24,8 +26,22 @@ func main() {
 
 	//ctx := context.Background()
 
-	processResponse(owner, repoName, token)
 	//processIssues(ctx, owner, repoName, token)
+
+	// TODO use in-memory repo so that this removal is unnecessary
+	err := os.RemoveAll("/tmp/mytmprepo")
+	if err != nil {
+		log.Fatal(err)
+	}
+	repo, err := GetLatestRepo("/tmp/mytmprepo", owner, repoName, token)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = processResponse("/tmp/mytmprepo", repo)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func processIssues(ctx context.Context, owner, repoName, token string) {
@@ -73,83 +89,55 @@ func processIssues(ctx context.Context, owner, repoName, token string) {
 	}
 }
 
-func processResponse(owner, repoName, token string) {
+func processResponse(localRepoPath string, repo *git.Repository /*owner, repoName, token string*/) error {
 	data, err := ioutil.ReadFile("response.txt")
 	if err != nil {
-		panic(err)
+		return err
 	}
 	issueResponse := ParseIssueResponse(string(data))
-	fmt.Println(issueResponse)
 
-	// Clone the repository
-	url := fmt.Sprintf("https://github.com/%s/%s.git", owner, repoName)
-	repo, err := git.PlainClone("/tmp/gptrepo", false, &git.CloneOptions{
-		URL: url,
-		Auth: &http.BasicAuth{
-			Username: owner,
-			Password: token,
-		},
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func() {
-		err := os.RemoveAll("/tmp/gptrepo")
-		if err != nil {
-			fmt.Println("error recursively removing temp repo")
-			fmt.Println(err)
-		}
-	}()
-
-	_ = repo
-}
-
-// Replace the contents of app/main.go
-/*
-	filePath := "../app/main.go"
-	newContents := []byte("test contents REPLACEME")
-
-	err = ioutil.WriteFile(filePath, newContents, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Clone the repository
-	url := fmt.Sprintf("https://github.com/%s/%s.git", owner, repoName)
-	repo, err := git.PlainClone("./tmp/repo", false, &git.CloneOptions{
-		URL: url,
-		Auth: &http.BasicAuth{
-			Username: "username", // Your GitHub username
-			Password: token,
-		},
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create a new git commit
+	// Create a worktree for a commit later
 	worktree, err := repo.Worktree()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	_, err = worktree.Add(filePath)
-	if err != nil {
-		log.Fatal(err)
-	}
-*/
+	for _, f := range issueResponse.Files {
+		fullPath := filepath.Join(localRepoPath, f.Path)
 
-/*
-	commit, err := worktree.Commit("test body REPLACEME", &git.CommitOptions{
+		// TODO standard indentation (for non-go files)
+		if strings.HasSuffix(f.Path, ".go") {
+			newContents, err := format.Source([]byte(f.Contents))
+			if err != nil {
+				return err
+			}
+			f.Contents = string(newContents)
+		}
+		err = ioutil.WriteFile(fullPath, []byte(f.Contents), 0644)
+		if err != nil {
+			return err
+		}
+
+		_, err = worktree.Add(f.Path)
+		if err != nil {
+			return err
+		}
+	}
+
+	commitMessage := "TODO subject from issue\n\n" + issueResponse.Notes + "\n\nResolves #issuenumber"
+	commit, err := worktree.Commit(commitMessage, &git.CommitOptions{
 		Author: &object.Signature{
-			Name:  "moby-robot",          // Replace with your name
-			Email: "mobyrobot@gmail.com", // Replace with your email
+			Name:  "moby-robot-fakename",           // Replace with your name
+			Email: "mobyrobot-fakeemail@gmail.com", // Replace with your email
 		},
 	})
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
-*/
+
+	_ = commit
+	return nil
+}
 
 // Create a new branch
 /*
