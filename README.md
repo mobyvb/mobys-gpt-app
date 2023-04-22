@@ -1,3 +1,5 @@
+**This repository was cleaned up and moved to a more formal one [here](https://github.com/mobyvb/pull-pal).**
+
 # Moby's cool app
 
 April 19, midnight:27
